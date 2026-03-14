@@ -1,1 +1,28 @@
 # Task 1.1 - Switching on lights. 
+
+const int porch = 2;
+const int hallway = 3;
+const int button = 4;
+
+void setup() {
+    pinMode(porch, OUTPUT);
+    pinMode(hallway, OUTPUT);
+    pinMode(button, INPUT_PULLUP);
+
+    digitalWrite(porch , LOW);
+    digitalWrite(hallway, LOW); //Ensuring the lights are off by default
+}
+
+void loop() {
+    if (digitalRead(button) == LOW) { 
+
+      digitalWrite(porch, HIGH); //Turning on both LEDs
+      digitalWrite(hallway, HIGH);
+
+      delay(30000); //Wait 30 seconds
+      digitalWrite(porch, LOW); //Turn off porch light
+
+      delay(30000); //Wait another 30 seconds
+      digitalWrite(hallway, LOW); //Turn off Hallway light.
+    }
+}
