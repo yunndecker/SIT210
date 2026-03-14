@@ -1,1 +1,1 @@
-
+The program I have written Identifies 3 main components. The 2 LED lights (Porch, Hallway) and my button that turns the lights on and the starts the timers. Within the code the LED lights start in an off state, and are activated via the button press. Once the button is pressed both LEDs come on and a 30second timer starts. Once that 30 second timer finishes I turn off the porch LED light and have another 30 second timer. Once the last timer is complete the Hallway LED is switched off. 
