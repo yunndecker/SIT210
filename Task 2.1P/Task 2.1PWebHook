@@ -1,0 +1,52 @@
+#include <WiFiNINA.h>
+#include <ThingSpeak.h>
+#include <DHT.h>
+#include <Wire.h>
+#include <hp_BH1750.h>
+
+//My internet
+char ssid[] = "Big Brain WiFi";
+char password[] = "GiantDonutFire4639";
+
+//ThingSpeak connection
+unsigned long channelID = 3302527;
+const char *apiKey = "XS1G072IGU1TMP5J";
+
+WiFiClient client;
+
+//Sensors
+#define DHTPIN 2
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+hp_BH1750 lightsensor;
+
+//main setup
+void setup() {
+  Serial.begin(9600);
+
+  dht.begin();                         //Start DHT sensor
+  Wire.begin();                        //Start I2C for light sensor
+  lightsensor.begin(BH1750_TO_GROUND);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(2000);
+  }
+
+  ThingSpeak.begin(client);
+}
+
+//main loop
+void loop() {
+  float t = dht.readTemperature();
+
+  lightsensor.start();
+  float l = lightsensor.getLux();
+
+  ThingSpeak.setField(1, t);
+  ThingSpeak.setField(2, l);
+  ThingSpeak.writeFields(channelID, apiKey);
+
+  delay(30000);
+}
