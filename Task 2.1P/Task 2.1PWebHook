@@ -10,7 +10,8 @@ char password[] = "Password1";
 
 //ThingSpeak details
 unsigned long channelID = 3302527;
-const char *apiKey = "YOUR_API_KEY";
+const char *apiKey = "XS1G072IGU1TMP5J";
+
 //Wifi client object
 WiFiClient client;
 
