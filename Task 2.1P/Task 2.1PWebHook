@@ -4,49 +4,72 @@
 #include <Wire.h>
 #include <hp_BH1750.h>
 
-//My internet
+//My internet details
 char ssid[] = "Big Brain WiFi";
 char password[] = "GiantDonutFire4639";
 
-//ThingSpeak connection
+//ThingSpeak connection details
 unsigned long channelID = 3302527;
 const char *apiKey = "XS1G072IGU1TMP5J";
 
+//Creating client object
 WiFiClient client;
 
-//Sensors
+//Sensors setup
 #define DHTPIN 2
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
-
 hp_BH1750 lightsensor;
+
+void connectWiFi();
+float readTemperature();
+float readLight();
+void sendToThingSpeak(float temperature, float light);
 
 //main setup
 void setup() {
   Serial.begin(9600);
 
-  dht.begin();                         //Start DHT sensor
-  Wire.begin();                        //Start I2C for light sensor
+  dht.begin();                 
+  Wire.begin();                
   lightsensor.begin(BH1750_TO_GROUND);
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(2000);
-  }
-
+  connectWiFi();
   ThingSpeak.begin(client);
 }
 
 //main loop
 void loop() {
-  float t = dht.readTemperature();
+  float t = readTemperature();
+  float l = readLight();
 
-  lightsensor.start();
-  float l = lightsensor.getLux();
-
-  ThingSpeak.setField(1, t);
-  ThingSpeak.setField(2, l);
-  ThingSpeak.writeFields(channelID, apiKey);
+  sendToThingSpeak(t, l);
 
   delay(30000);
+}
+
+//connect Arduino to WiFi
+void connectWiFi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(2000);
+  }
+}
+
+//Read temperature data
+float readTemperature() {
+  return dht.readTemperature();
+}
+
+//Read light level data
+float readLight() {
+  lightsensor.start();
+  return lightsensor.getLux();
+}
+
+//Sending values to ThingSpeak
+void sendToThingSpeak(float temperature, float light) {
+  ThingSpeak.setField(1, temperature);
+  ThingSpeak.setField(2, light);
+  ThingSpeak.writeFields(channelID, apiKey);
 }
