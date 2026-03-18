@@ -4,25 +4,62 @@ const int porch = 2;
 const int hallway = 3;
 const int button = 4;
 
-void setup() {
+void setupPins() {
     pinMode(porch, OUTPUT);
     pinMode(hallway, OUTPUT);
     pinMode(button, INPUT_PULLUP);
-
-    digitalWrite(porch , LOW);
-    digitalWrite(hallway, LOW); //Ensuring the lights are off by default
 }
 
+//Ensuring the lights are off by default
+void lights() {
+    digitalWrite(porch , LOW);
+    digitalWrite(hallway, LOW); 
+}
+
+//Turning the lights on
+void turnLightsOn() {
+    digitalWrite(porch, HIGH);
+    digitalWrite(hallway, HIGH);
+}
+
+//Turning off porch light
+void turnPorchOff() {
+    digitalWrite(porch, LOW);
+}
+
+//Turning off hallway light
+void turnHallwayOff() {
+    digitalWrite(hallway, LOW);
+}
+
+//Lighting program
+void lightProgram() {
+    turnLightsOn();
+
+    delay(30000);
+
+    turnPorchOff();
+
+    delay(30000);
+
+    turnHallwayOff();
+}
+
+//Check if button is pressed
+bool buttonPress() {
+    return digitalRead(button) == LOW;
+}
+
+//Initial setup
+void setup() {
+    setupPins();
+    lights();
+}
+
+//Run the program
 void loop() {
-    if (digitalRead(button) == LOW) { 
-
-      digitalWrite(porch, HIGH); //Turning on both LEDs
-      digitalWrite(hallway, HIGH);
-
-      delay(30000); //Wait 30 seconds
-      digitalWrite(porch, LOW); //Turn off porch light
-
-      delay(30000); //Wait another 30 seconds
-      digitalWrite(hallway, LOW); //Turn off Hallway light.
+    if (buttonPress()) {
+        lightProgram();
     }
 }
+
