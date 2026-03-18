@@ -4,51 +4,41 @@
 #include <Wire.h>
 #include <hp_BH1750.h>
 
-//My internet details
-char ssid[] = "Big Brain WiFi";
-char password[] = "GiantDonutFire4639";
+//WiFi details
+char ssid[] = "BigBrainWifi";
+char password[] = "Password1";
 
-//ThingSpeak connection details
+//ThingSpeak details
 unsigned long channelID = 3302527;
-const char *apiKey = "XS1G072IGU1TMP5J";
-
-//Creating client object
+const char *apiKey = "YOUR_API_KEY";
+//Wifi client object
 WiFiClient client;
 
-//Sensors setup
-#define DHTPIN 2
-#define DHTTYPE DHT11
-DHT dht(DHTPIN, DHTTYPE);
-hp_BH1750 lightsensor;
+//Sensors
+DHT dht(2, DHT11);
+hp_BH1750 light;
 
-void connectWiFi();
-float readTemperature();
-float readLight();
-void sendToThingSpeak(float temperature, float light);
-
-//main setup
+//Setup
 void setup() {
-  Serial.begin(9600);
-
-  dht.begin();                 
-  Wire.begin();                
-  lightsensor.begin(BH1750_TO_GROUND);
+  dht.begin();
+  Wire.begin();
+  light.begin(BH1750_TO_GROUND);
 
   connectWiFi();
   ThingSpeak.begin(client);
 }
 
-//main loop
+//Loop
 void loop() {
-  float t = readTemperature();
-  float l = readLight();
+  float t = getTemp();
+  float l = getLight();
 
-  sendToThingSpeak(t, l);
+  sendData(t, l);
 
   delay(30000);
 }
 
-//connect Arduino to WiFi
+//Connect WiFi
 void connectWiFi() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -56,20 +46,20 @@ void connectWiFi() {
   }
 }
 
-//Read temperature data
-float readTemperature() {
+//Get temperature
+float getTemp() {
   return dht.readTemperature();
 }
 
-//Read light level data
-float readLight() {
-  lightsensor.start();
-  return lightsensor.getLux();
+//Get light
+float getLight() {
+  light.start();
+  return light.getLux();
 }
 
-//Sending values to ThingSpeak
-void sendToThingSpeak(float temperature, float light) {
-  ThingSpeak.setField(1, temperature);
-  ThingSpeak.setField(2, light);
+//Send to ThingSpeak
+void sendData(float t, float l) {
+  ThingSpeak.setField(1, t);
+  ThingSpeak.setField(2, l);
   ThingSpeak.writeFields(channelID, apiKey);
 }
