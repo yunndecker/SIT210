@@ -1,1 +1,90 @@
+#include <Wire.h>
+#include <hp_BH1750.h>
+#include <WiFiNINA.h>
 
+//My Wifi Details
+char ssid[] = "Big Brain WiFi";
+char password[] = "GiantDonutFire4639";
+
+//IFTTT details
+char server[] = "maker.ifttt.com";
+String key = "cxn_prtrKFcrcdA0A22bP";
+
+//Wifi Client object
+WiFiClient client;
+
+//Light sensor object
+hp_BH1750 light;
+
+
+float threshold = 50.0;
+bool sunlightDetected = false;
+
+// Initial setup
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  light.begin(BH1750_TO_GROUND);
+  connectWiFi();
+}
+
+void loop(){
+  float lux = getLight();                //Reading light value
+  bool current = checkSunlight(lux);     //Checking if there is sunlight
+
+  Serial.print("Lux: ");                //Print lux
+  Serial.println(lux);                  //Print light value
+  checkChanges(current, lux);            //Detect sunlight change
+  delay(5000);                          //Wait 5 seconds
+}
+
+//Connecting to Wifi
+void connectWiFi() {
+  WiFi.begin(ssid, password);           
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(2000);                        
+  }
+}
+
+//Get light
+float getLight() {
+  light.start();                       
+  return light.getLux();                
+}
+
+//Check if there is sunlight
+bool checkSunlight(float lux) {
+  return lux >= threshold;              
+}
+
+// Send notification to IFTTT
+void sendIFTTT(String event, float lux) {
+  if (client.connect(server, 80)) {
+
+    if (event == "sunlight_start") {
+      client.println("GET /trigger/sunlight_start/with/key/cxn_prtrKFcrcdA0A22bP?value1=" + String(lux) + " HTTP/1.1");
+    } 
+    else if (event == "sunlight_stopped") {
+      client.println("GET /trigger/sunlight_stopped/with/key/cxn_prtrKFcrcdA0A22bP?value1=" + String(lux) + " HTTP/1.1");
+    }
+
+    client.println("Host: maker.ifttt.com");
+    client.println("Connection: close");
+    client.println();
+  }
+}
+
+
+//Checking for sunlight change
+void checkChanges(bool current, float lux) {
+  if (current && !sunlightDetected) {           //If sunlight started
+    Serial.println("Sunlight STARTED");         //message
+    sendIFTTT("sunlight_start", lux);           //Send IFTTT notification
+    sunlightDetected = true;                    //Update state
+  }
+  if (!current && sunlightDetected) {           //If sunlight stopped
+    Serial.println("Sunlight STOPPED");         //message
+    sendIFTTT("sunlight_stopped", lux);         //Send IFTTT notification
+    sunlightDetected = false;                   //Update state
+  }
+}
