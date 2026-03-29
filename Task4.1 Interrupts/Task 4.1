@@ -1,0 +1,98 @@
+#include <Wire.h>
+#include <BH1750.h>
+
+BH1750 lightSense;
+
+//Pins setup
+const int led1 = 5;
+const int led2 = 6;
+const int pirPin = 2;
+const int switchPin = 3;
+
+//Needed Settings
+const float darkness = 40.0;
+const unsigned long lightDuration = 10000;
+
+//Interrupt Flags
+volatile bool motionDetected = false;
+volatile bool switchActivated = false;
+
+//Tracking the lights state
+bool lightsOn = false;              //Track if LEDs are currently on
+unsigned long lightsStartTime = 0;  //Stores time when lights were on
+
+//Interupt for motion detection
+void motionInter() {
+  motionDetected = true;  //Setting motionDetected to true when motion interrupt occurs.
+}
+
+//interupt for switch
+void switchInter() {
+  switchActivated = true; //Set switchActivated variable to true when switch interupt occurs
+}
+
+//Function turning on both LEDs
+void turnLightsOn() {
+  digitalWrite(led1, HIGH);
+  digitalWrite(led2, HIGH);
+  lightsOn = true;
+  lightsStartTime = millis();
+}
+
+//Function to turn both LEDs off
+void turnLightsOff() {
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+  lightsOn = false;
+}
+
+//General setup
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(pirPin, INPUT);
+  pinMode(switchPin, INPUT_PULLDOWN);
+
+//Start light sensor
+  Wire.begin();
+  lightSense.begin();
+
+//Interupts
+  attachInterrupt(digitalPinToInterrupt(pirPin), motionInter, RISING);
+  attachInterrupt(digitalPinToInterrupt(switchPin), switchInter, RISING);
+
+//LEDs start off
+  turnLightsOff();
+
+//Printout to know system had started
+  Serial.println("System started");
+}
+
+void loop() {
+  float lux = lightSense.readLightLevel();  //storing current light level
+
+//Checking for motion interrupts
+  if (motionDetected) {
+    motionDetected = false;
+
+    if (lux < darkness) { //Comparing lux to darkness level
+      turnLightsOn();     //Call function to turn on lights
+      Serial.println("Motion detected while it's dark - lights On");
+    } else {
+      Serial.println("Motion detected but it's bright - lights stay Off");
+    }
+  }
+//Checking for switch interrupts
+  if (switchActivated) {
+    switchActivated = false;
+    turnLightsOn();
+    Serial.println("Switch activated - lights On");
+  }
+//Check if lights should turn off
+  if (lightsOn && millis() - lightsStartTime >= lightDuration) { //LightsOn must be true and enough time must have passed
+    turnLightsOff();
+    Serial.println("Lights turned Off");
+  }
+}
